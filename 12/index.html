@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>税金のある町　税金のない町</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .container { width: 80%; margin: auto; }
+        .quiz-container { margin-top: 20px; }
+        .options-container { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            justify-items: center;
+        }
+        .option { 
+            padding: 10px; 
+            cursor: pointer; 
+            border: 1px solid black; 
+            background-color: lightgray; 
+            font-size: 1.5em;
+            width: 450px;
+            text-align: center;
+        }
+        .correct { background-color: lightgreen; }
+        .wrong { background-color: lightcoral; }
+        .image-container { display: flex; justify-content: center; margin-bottom: 20px; }
+        .image-container img { width: 45%; margin: 0 10px; border: 1px solid black; cursor: pointer; }
+        .fullscreen { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.8); 
+            justify-content: center; 
+            align-items: center; 
+        }
+        .fullscreen img { 
+            max-width: 90%; 
+            max-height: 90%; 
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: red;
+            color: white;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+        #title { font-size: 2em; font-weight: bold; margin-bottom: 20px; }
+        #question { font-size: 1.5em; }
+        #score { font-size: 2em; font-weight: bold; color: darkblue; }
+        .result-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        #next-button {
+            display: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            background-color: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .home-button {
+            position: fixed;
+            Top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+        .home-button:hover { background-color: #cc0000; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fadeIn { opacity: 0; animation: fadeIn 1s ease-out forwards; }
+        .fadeInUp { opacity: 0; animation: fadeInUp 1s ease-out forwards; }
+        .fadeInUp-delayed { opacity: 0; animation: fadeInUp 1s ease-out forwards; animation-delay: 0.5s; }
+    </style>
+</head>
+<body>
+    <button class="home-button" onclick="location.href='../main.html'">HOME</button>
+    <div class="container">
+        <h2 id="title" class="fadeIn">税金のある町　税金のない町</h2>
+        <div class="image-container fadeInUp">
+            <img src="tax-country2022.jpg" alt="税金のある町" onclick="openFullscreen(this)">
+            <img src="no-tax-country2022.jpg" alt="税金のない町" onclick="openFullscreen(this)">
+        </div>
+        <div class="quiz-container fadeInUp-delayed">
+            <h3 id="question">問題が表示されます</h3>
+            <div id="options" class="options-container"></div>
+            <div class="result-container">
+                <p id="result"></p>
+                <button id="next-button" onclick="nextQuestion()">次の問題</button>
+            </div>
+        </div>
+        <div style="margin-top: 30px;">
+            <button onclick="location.href='notax-escapegame.html'" style="
+                background-color: #1E90FF;
+                color: white;
+                padding: 15px 30px;
+                font-size: 1.5em;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            ">
+                次は「税金のない世界からの脱出ゲーム」に挑戦してみよう！
+            </button>
+        </div>
+        <h3 id="score" style="display:none;">最終得点: 0 / 10</h3>
+    </div>
+    <div id="fullscreen" class="fullscreen">
+        <button class="close-btn" onclick="closeFullscreen()">この画像を閉じる</button>
+        <img id="fullscreen-img" src="">
+    </div>
+    <script>
+        const quizData = [
+            { question: "税金がなくなるとどうなる？", options: ["お金持ちだけが住める", "すべて無料になる", "道路がこわれたままになる", "UFOが来るようになる"], correct: "道路がこわれたままになる" },
+            { question: "税金がなくなったら警察は？", options: ["AIロボットが担当", "スーパーヒーローが助けてくれる", "くじ引きで選ばれる", "いなくなる"], correct: "いなくなる" },
+            { question: "消防士がいなくなったらどうなる？", options: ["龍が火を吹いて消す", "火が自然に消える", "火事が消せなくなる", "雨が降るまで待つ"], correct: "火事が消せなくなる" },
+            { question: "ゴミ収集がなくなると？", options: ["ロボットが処理する", "ゴミが勝手に消える", "カラスが片付ける", "町がゴミだらけになる"], correct: "町がゴミだらけになる" },
+            { question: "学校がなくなると？", options: ["教育を受けられなくなる", "勉強しなくても頭がよくなる", "宇宙人が教えてくれる", "YouTubeで学べば問題ない"], correct: "教育を受けられなくなる" },
+            { question: "病院がなくなったら？", options: ["家で寝てれば全部治る", "魔法で治せる", "動物が治してくれる", "病気が治らなくなる"], correct: "病気が治らなくなる" },
+            { question: "水道が止まったら？", options: ["コーラが水の代わりになる", "雨水で十分", "井戸が増える", "水が使えなくなる"], correct: "水が使えなくなる" },
+            { question: "図書館がなくなると？", options: ["読書の必要がなくなる", "すべての本が電子化される", "本を借りられなくなる", "動物たちが代わりに本を読んでくれる"], correct: "本を借りられなくなる" },
+            { question: "公園がなくなると？", options: ["バーチャル公園ができる", "家の庭が公園になる", "遊ぶ場所がなくなる", "道路が公園になる"], correct: "遊ぶ場所がなくなる" },
+            { question: "税金がなくなると最後にどうなる？", options: ["空からお金が降ってくる", "何も変わらない", "町が崩壊する", "みんなが超能力を得る"], correct: "町が崩壊する" }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let firstAttempt = true;
+
+        function loadQuestion() {
+            if (currentQuestion >= quizData.length) {
+                document.querySelector(".quiz-container").style.display = "none";
+                document.getElementById("score").innerText = `最終得点: ${score} / ${quizData.length}`;
+                document.getElementById("score").style.display = "block";
+                return;
+            }
+
+            firstAttempt = true;
+            const q = quizData[currentQuestion];
+            document.getElementById("question").innerText = q.question;
+            const optionsContainer = document.getElementById("options");
+            optionsContainer.innerHTML = "";
+            document.getElementById("result").innerText = "";
+            document.getElementById("next-button").style.display = "none";
+
+            q.options.forEach(option => {
+                const btn = document.createElement("button");
+                btn.innerText = option;
+                btn.className = "option";
+                btn.onclick = () => checkAnswer(option, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(answer, btn) {
+            const result = document.getElementById("result");
+            const options = document.querySelectorAll(".option");
+            options.forEach(option => option.disabled = true);
+
+            const correctAnswer = quizData[currentQuestion].correct;
+
+            if (firstAttempt && answer === correctAnswer) {
+                score++;
+                result.innerText = "正解！";
+                result.style.color = "green";
+                btn.classList.add("correct");
+            } else {
+                result.innerText = "残念！";
+                result.style.color = "red";
+                btn.classList.add("wrong");
+            }
+
+            firstAttempt = false;
+            document.getElementById("next-button").style.display = "block";
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            loadQuestion();
+        }
+
+        function openFullscreen(img) {
+            document.getElementById("fullscreen-img").src = img.src;
+            document.getElementById("fullscreen").style.display = "flex";
+        }
+
+        function closeFullscreen() {
+            document.getElementById("fullscreen").style.display = "none";
+        }
+
+        loadQuestion();
+</script>
+</body>
+</html>
